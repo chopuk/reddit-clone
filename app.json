@@ -2,6 +2,7 @@
   "expo": {
     "name": "reddit-clone",
     "slug": "reddit-clone",
+    "scheme": "reddit-clone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,10 +21,21 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.bigchopper.redditclone"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "11f3680c-5118-4a32-9731-1b75e134b62d"
+      }
     }
   }
 }
