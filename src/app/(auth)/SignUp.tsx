@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Text, TextInput, Button, View, StyleSheet, Keyboard, ScrollView, Dimensions, ViewStyle } from 'react-native'
+import { Text, TextInput, Button, View, StyleSheet, Keyboard, ScrollView, Dimensions, ViewStyle, Alert, TouchableOpacity } from 'react-native'
 import { useSignUp, useSSO } from '@clerk/clerk-expo'
 import { useRouter } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp()
@@ -26,6 +27,12 @@ const SignUp = () => {
 
   const [dynamicPosition, setDynamicPosition] = useState<JustifyContentT>('center')
   const [isCentered, setIsCentered] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
+
+  const togglePasswordVisibility = () => {
+    //Keyboard.dismiss()
+    setShowPassword(!showPassword)
+  }
   
   const justifyContent = isCentered ? 'center' : 'flex-start'
 
@@ -34,10 +41,10 @@ const SignUp = () => {
     setIsCentered(false)
   }
 
-  const isEmailValid = (value) => {
+  const isEmailValid = (value: string) => {
     const regx = /^[^@]+@[^@]+\.[^@]+$/
     return regx.test(value)
-}
+  }
 
   useEffect(() => {
     Keyboard.addListener('keyboardDidHide', () => {
@@ -64,10 +71,14 @@ const SignUp = () => {
       // Set 'pendingVerification' to true to display second form
       // and capture OTP code
       setPendingVerification(true)
-    } catch (err) {
+    } catch (err: any) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      var errors = ''
+      err.errors.forEach((error: any) => {
+        errors = errors + error.message + '\n'
+      })
+      Alert.alert('Sign Up Failure', errors)
     }
   }
 
@@ -90,17 +101,23 @@ const SignUp = () => {
         // If the status is not complete, check why. User may need to
         // complete further steps.
         console.error(JSON.stringify(signUpAttempt, null, 2))
+              
       }
     } catch (err) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       console.error(JSON.stringify(err, null, 2))
+      
     }
   }
 
   if (pendingVerification) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.pendingContainer, { marginBottom: 40 }]}>
+        <LinearGradient
+            colors={['#6148d1ff','#49a35fff','#c02b3fff']}
+            style={StyleSheet.absoluteFill}
+        />
         <Text style={styles.title}>Verify Your Email</Text>
         <TextInput
           style={styles.input}
@@ -125,6 +142,7 @@ const SignUp = () => {
         <ScrollView 
           style={styles.scroll}
           contentContainerStyle={styles.contentStyle}
+          keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.title}>Sign Up</Text>
           <TextInput
@@ -145,15 +163,27 @@ const SignUp = () => {
             onChangeText={setUsername}
             onFocus={()=>inputFocusDetected()}
           />
-          <TextInput
-            style={styles.input}
-            value={password}
-            placeholder='Enter password'
-            placeholderTextColor='#aaa'
-            secureTextEntry
-            onChangeText={setPassword}
-            onFocus={()=>inputFocusDetected()}
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.input}
+              value={password}
+              placeholder='Enter password'
+              placeholderTextColor='#aaa'
+              secureTextEntry={!showPassword}
+              onChangeText={setPassword}
+              onFocus={()=>inputFocusDetected()}
+            />
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.eyeButton}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={26}
+                color="#e73636"
+              />
+            </TouchableOpacity>
+          </View>
           <Button title='Continue' onPress={onSignUpPress} />
         </ScrollView>
       </View>
@@ -194,9 +224,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'lightgrey',
     borderRadius: 10,
-    paddingHorizontal: 100,
+    paddingHorizontal: 10,
     marginBottom: 15,
     backgroundColor: 'white',
+  },
+ passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 5,
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 15,
+    top: '50%',
+    marginTop: -20
+  },
+  pendingContainer: {
+    flex:1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   }
-
 })

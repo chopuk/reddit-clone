@@ -1,8 +1,9 @@
 import { useSignIn } from '@clerk/clerk-expo'
 import { Link, useRouter } from 'expo-router'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button, Keyboard, Alert } from 'react-native';
 import { useCallback, useEffect, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 
 const SignIn = () => {
   const { signIn, setActive, isLoaded } = useSignIn()
@@ -11,6 +12,11 @@ const SignIn = () => {
   const [emailAddress, setEmailAddress] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [dynamicMargin, setDynamicMargin] = useState(0)
+  const [showPassword, setShowPassword] = useState(false)
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
+  }
 
   const inputFocusDetected = () => {
     setDynamicMargin(150)
@@ -44,10 +50,14 @@ const SignIn = () => {
         // complete further steps.
         console.error(JSON.stringify(signInAttempt, null, 2))
       }
-    } catch (err) {
+    } catch (err: any) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err, null, 2))
+      var errors = ''
+      err.errors.forEach((error: any) => {
+        errors = errors + error.message + '\n'
+      })
+      Alert.alert('Sign In Failure', errors)
     }
   }, [isLoaded, emailAddress, password])
 
@@ -68,15 +78,27 @@ const SignIn = () => {
         onChangeText={setEmailAddress}
         onFocus={()=>inputFocusDetected()}
       />
-      <TextInput
-        style={styles.input}
-        value={password}
-        placeholder='Enter password'
-        placeholderTextColor='#aaa'
-        secureTextEntry
-        onChangeText={setPassword}
-        onFocus={()=>inputFocusDetected()}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.input}
+          value={password}
+          placeholder='Enter password'
+          placeholderTextColor='#aaa'
+          secureTextEntry={!showPassword}
+          onChangeText={setPassword}
+          onFocus={()=>inputFocusDetected()}
+        />
+        <TouchableOpacity 
+          onPress={togglePasswordVisibility}
+          style={styles.eyeButton}
+        >
+          <Ionicons
+            name={showPassword ? 'eye-off' : 'eye'}
+            size={26}
+            color="#e73636"
+          />
+        </TouchableOpacity>
+      </View>
       <Button title='Sign In' onPress={onSignInPress} />
       <View style={styles.signUpContainer}>
         <Text style={styles.text}>Don't have an account?</Text>
@@ -128,5 +150,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'black',
     fontWeight: 'bold',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 5,
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 15,
+    top: '50%',
+    marginTop: -20
   }
 })
